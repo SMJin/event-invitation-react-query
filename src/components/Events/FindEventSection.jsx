@@ -1,10 +1,18 @@
-import { useRef } from 'react';
+import { useState } from 'react';
+import { fetchEvents } from '../../util/http';
+import { useQuery } from '@tanstack/react-query';
 
 export default function FindEventSection() {
-  const searchElement = useRef();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const {data, isPending, isError, error} = useQuery({
+    queryKey: ['events', searchTerm],
+    queryFn: () => fetchEvents({ searchTerm }),
+  });
 
   function handleSubmit(event) {
     event.preventDefault();
+    setSearchTerm(event.target.elements[0].value);
   }
 
   return (
@@ -15,12 +23,12 @@ export default function FindEventSection() {
           <input
             type="search"
             placeholder="Search events"
-            ref={searchElement}
           />
           <button>Search</button>
         </form>
       </header>
       <p>Please enter a search term and to find events.</p>
+      {isPending && <p>Loading...</p>}
     </section>
   );
 }

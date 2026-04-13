@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 
 export default function NewEventsSection() {
 
-  const {data, isLoading, isError, error} = useQuery({
+  const {data, isPending, isError, error} = useQuery({
     queryKey: ['events'],
     queryFn: fetchEvents,
   });
@@ -18,7 +18,7 @@ export default function NewEventsSection() {
       <header>
         <h2>Recently added events</h2>
       </header>
-      {isLoading && <LoadingIndicator />}
+      {isPending && <LoadingIndicator />}
       {isError && <ErrorBlock title="An error occurred" message={error.message} />}
       {data && (
         <ul className="events-list">
