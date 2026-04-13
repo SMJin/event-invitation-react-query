@@ -12,7 +12,7 @@ export default function EditEvent() {
   const navigate = useNavigate();
 
   const { data, isPending, isError, error } = useQuery({
-    queryKey: ['events', params.id],
+    queryKey: ['event', params.id],
     queryFn: ({signal}) => fetchEvent({ signal, id: params.id }),
   })
 
@@ -27,25 +27,39 @@ export default function EditEvent() {
       // 이때, cancleQueries는 promise를 반환하므로 await로 처리해야 됨. 그럼 함수에도 async 키워드가 필요함.
       await queryClient.cancelQueries({queryKey: ['events', params.id]});
 
-      // 낙관적 업데이트를 했지만, 백엔드 요청에서 실패했을 상황을 고려해서 Rollback 전략도 있어야 함.
-      const previousEvent = queryClient.getQueryData(['events', params.id]); // 업데이트하기 전의 이전 데이터 저장해놓기.
+      // 이전 데이터 저장 (롤백용)
+      const previousEvent = queryClient.getQueryData(['event', params.id]);
+      const previousEvents = queryClient.getQueryData(['events']);
 
+      // 개별 상세 페이지 업데이트
       queryClient.setQueryData(
-        ['events', params.id], // key
-        newEvent, // new data
+        ['event', params.id],
+        newEvent,
       );
 
-      return { previousEvent }; // onError에서 rollback할 때 사용할 수 있도록 반환
+      // 목록에서도 해당 이벤트 업데이트 (있으면)
+      const events = queryClient.getQueryData(['events']);
+      if (events) {
+        queryClient.setQueryData(
+          ['events'],
+          events.map(e => e.id === params.id ? newEvent : e)
+        );
+      }
+
+      return { previousEvent, previousEvents };
     },
 
     // error: 실패하게 되는 error 객체 수신
     // data: mutate 함수에 전달된 데이터
     // context: onMutate에서 반환된 객체 (이 경우, previousEvent)
     onError: (error, data, context) => {
-      queryClient.setQueriesData(
-        ['events', params.id], // rollback할 key
-        context.previousEvent, // rollback할 이전 데이터
+      queryClient.setQueryData(
+        ['event', params.id],
+        context.previousEvent,
       );
+      if (context.previousEvents) {
+        queryClient.setQueryData(['events'], context.previousEvents);
+      }
     },
   });
 
