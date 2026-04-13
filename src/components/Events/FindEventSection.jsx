@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { fetchEvents } from '../../util/http';
 import { useQuery } from '@tanstack/react-query';
+import EventItem from './EventItem';
 
 export default function FindEventSection() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState();
 
-  const {data, isPending, isError, error} = useQuery({
+  const {data, isLoading, isError, error} = useQuery({
     queryKey: ['events', searchTerm],
     queryFn: () => fetchEvents({ searchTerm }),
+    enabled: searchTerm !== undefined,
   });
 
   function handleSubmit(event) {
@@ -27,8 +29,18 @@ export default function FindEventSection() {
           <button>Search</button>
         </form>
       </header>
-      <p>Please enter a search term and to find events.</p>
-      {isPending && <p>Loading...</p>}
+      {searchTerm === undefined && <p>Please enter a search term to find events.</p>}
+      {isLoading && <p>Loading...</p>}
+      {isError && <ErrorBlock title="An error occurred" message={error.message} />}
+      {data && (
+        <ul className="events-list">
+          {data.map((event) => (
+            <li key={event.id}>
+              <EventItem event={event} />
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
