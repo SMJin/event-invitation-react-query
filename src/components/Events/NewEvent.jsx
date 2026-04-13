@@ -2,11 +2,19 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import Modal from '../UI/Modal.jsx';
 import EventForm from './EventForm.jsx';
+import { createNewEvent, queryClient } from '../../util/http.js';
+import { useMutation } from '@tanstack/react-query';
 
 export default function NewEvent() {
   const navigate = useNavigate();
 
-  function handleSubmit(formData) {}
+  const {mutate, isPending, isError, error} = useMutation({
+    mutationFn: createNewEvent,
+  });
+
+  function handleSubmit(formData) {
+    mutate({event: formData});
+  }
 
   return (
     <Modal onClose={() => navigate('../')}>
