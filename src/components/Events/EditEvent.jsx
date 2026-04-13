@@ -61,6 +61,15 @@ export default function EditEvent() {
         queryClient.setQueryData(['events'], context.previousEvents);
       }
     },
+
+    // Mutation 완료 후 (성공/실패 상관없이) 실행
+    // 낙관적 업데이트는 "추측"일 뿐이므로,
+    // 백엔드 응답 후 캐시를 "stale" 상태로 표시해서
+    // 다음 요청 시 백엔드에서 최신 데이터를 다시 가져오도록 강제
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] });
+      queryClient.invalidateQueries({ queryKey: ['event', params.id] });
+    },
   });
 
   function handleSubmit(formData) {
