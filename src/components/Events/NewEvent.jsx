@@ -4,12 +4,16 @@ import Modal from '../UI/Modal.jsx';
 import EventForm from './EventForm.jsx';
 import { createNewEvent, queryClient } from '../../util/http.js';
 import { useMutation } from '@tanstack/react-query';
+import ErrorBlock from '../UI/ErrorBlock.jsx';
 
 export default function NewEvent() {
   const navigate = useNavigate();
 
   const {mutate, isPending, isError, error} = useMutation({
     mutationFn: createNewEvent,
+    onSuccess: () => {
+      navigate(`/events`);
+    },
   });
 
   function handleSubmit(formData) {
@@ -20,14 +24,20 @@ export default function NewEvent() {
     <Modal onClose={() => navigate('../')}>
       <EventForm onSubmit={handleSubmit}>
         <>
-          <Link to="../" className="button-text">
-            Cancel
-          </Link>
-          <button type="submit" className="button">
-            Create
-          </button>
+          {isPending && <p>Creating event...</p>}
+          {!isPending && (
+            <>
+              <Link to="../" className="button-text">
+                Cancel
+              </Link>
+              <button type="submit" className="button">
+                Create
+              </button>
+            </>
+          )}
         </>
       </EventForm>
+      {isError && <ErrorBlock title="Error creating event" message={error.info.message} />}
     </Modal>
   );
 }
